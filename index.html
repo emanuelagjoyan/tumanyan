@@ -25,7 +25,7 @@
         @media (min-width: 768px) { h1 { font-size: 36px; } }
         .subtitle { color: #8fbc8f; margin-bottom: 20px; font-style: italic; text-align: center; font-size: 14px; }
         
-        /* --- ՑԱՆՑԻ ԿԱՐԳԱՎՈՐՈՒՄՆԵՐ (GRID) --- */
+        /* --- ՑԱՆՑ (GRID) - ՄԻՇՏ 7 ՍՅՈՒՆԱԿ --- */
         .grid { 
             display: grid; 
             width: 100%; 
@@ -33,7 +33,7 @@
             margin: 0 auto;
             gap: 4px; 
             padding-bottom: 40px;
-            grid-template-columns: repeat(7, 1fr) !important; /* ՄԻՇՏ 7 ՍՅՈՒՆԱԿ */
+            grid-template-columns: repeat(7, 1fr) !important; 
         }
 
         /* Բառերի ոճավորում */
@@ -98,13 +98,13 @@
         .btn-back { position: fixed; top: 10px; left: 10px; background: #34495e; font-size: 12px; padding: 5px 10px; z-index: 1000; width: auto; }
 
         /* Leaderboard */
-        .leaderboard { width: 100%; max-width: 800px; margin-top: 20px; padding: 0 5px; box-sizing: border-box; }
-        .lb-row { display: flex; align-items: center; background: #14402a; margin-bottom: 5px; padding: 10px; border-radius: 8px; }
-        .lb-name { flex: 1; text-align: left; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .lb-stat { margin: 0 5px; font-size: 16px; min-width: 30px; text-align: right; }
-        .bar-container { flex: 1; background: #051e11; height: 8px; border-radius: 4px; margin: 0 5px; overflow: hidden; display: none; }
+        .leaderboard { width: 95%; max-width: 1400px; margin-top: 20px; }
+        .lb-row { display: flex; align-items: center; background: #14402a; margin-bottom: 15px; padding: 15px 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .lb-name { flex: 1; text-align: left; font-weight: 900; font-size: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 1px 1px 2px black; }
+        .lb-stat { margin: 0 25px; font-size: 28px; font-weight: bold; min-width: 60px; text-align: right; color: #ffd700; }
+        .bar-container { flex: 2; background: #051e11; height: 25px; border-radius: 12px; margin: 0 20px; overflow: hidden; display: none; border: 2px solid #2e5c44; }
         @media (min-width: 500px) { .bar-container { display: block; } }
-        .bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, #d4a017, #f1c40f); width: 0%; transition: width 0.5s ease-in-out; }
 
         /* Player Screen Elements */
         #player-collected-lines {
@@ -344,8 +344,8 @@
         showScreen('screen-main-menu');
     }
 
-    // --- LOCAL MODE ---
-    let localState = { turn: 1, scores: {1:0, 2:0, 3:0}, history: [], totalItems: 0 };
+    // --- LOCAL MODE (3 TEAMS) ---
+    let localState = { turn: 1, scores: {1:0, 2:0, 3:0}, history: [], usedCount: 0, totalItems: 0 };
 
     function startLocalMode() {
         showScreen('screen-local-game');
@@ -362,7 +362,7 @@
     }
 
     function initLocalGame(game) {
-        localState = { turn: 1, scores: {1:0, 2:0, 3:0}, history: [], totalItems: game.data.length };
+        localState = { turn: 1, scores: {1:0, 2:0, 3:0}, history: [], usedCount: 0, totalItems: game.data.length };
         document.getElementById('local-game-title').innerText = game.name;
         document.getElementById('local-game-board').classList.remove('hidden');
         document.getElementById('local-counter').innerText = "0 / " + localState.totalItems;
@@ -399,6 +399,7 @@
         
         if (isCorrect) {
             localState.scores[t]++;
+            localState.usedCount++;
             div.classList.add('used', 'correct');
             document.getElementById(`l-list-${t}`).innerHTML += item.w + ", ";
         } else {
@@ -407,13 +408,14 @@
         }
         
         document.getElementById(`l-score-${t}`).innerText = localState.scores[t];
-        
-        setTimeout(() => {
-            const remaining = document.querySelectorAll('#local-grid .word:not(.used)').length;
-            document.getElementById('local-counter').innerText = (localState.totalItems - remaining) + " / " + localState.totalItems;
-            if (remaining === 0) finishLocalGame();
-            else { localState.turn = (t % 3) + 1; updateLocalUI(); }
-        }, 100);
+        document.getElementById('local-counter').innerText = localState.usedCount + " / " + localState.totalItems;
+
+        if (localState.usedCount === localState.totalItems) {
+            finishLocalGame();
+        } else {
+            localState.turn = (t % 3) + 1;
+            updateLocalUI();
+        }
     }
 
     function finishLocalGame() {
@@ -438,6 +440,7 @@
         }
         html += '</table>';
         document.getElementById('winner-name').innerHTML = html;
+        document.getElementById('winner-overlay').classList.remove('hidden');
         document.getElementById('winner-overlay').style.display = 'flex';
     }
 
@@ -447,13 +450,13 @@
         localState.turn = last.turn;
         if (last.correct) {
             localState.scores[last.turn]--;
+            localState.usedCount--;
             last.div.classList.remove('used', 'correct');
             let list = document.getElementById(`l-list-${last.turn}`);
             list.innerText = list.innerText.replace(last.word + ", ", "");
         }
         document.getElementById(`l-score-${last.turn}`).innerText = localState.scores[last.turn];
-        const remaining = document.querySelectorAll('#local-grid .word:not(.used)').length;
-        document.getElementById('local-counter').innerText = (localState.totalItems - remaining) + " / " + localState.totalItems;
+        document.getElementById('local-counter').innerText = localState.usedCount + " / " + localState.totalItems;
         updateLocalUI();
     }
 
@@ -564,9 +567,14 @@
     }
 
     function endOnlineGame() {
+        Object.values(connections).forEach(c => c.send({ type: 'end' }));
+        showOnlineWinners();
+    }
+
+    function showOnlineWinners() {
         let players = Object.values(connections).map(c => c.metadata);
         
-        // Sorting: 1. Finished, 2. Fewest Errors, 3. High Score
+        // Sorting: 1. Finished, 2. Fewest Errors
         players.sort((a,b) => {
             if (a.finished && !b.finished) return -1;
             if (!a.finished && b.finished) return 1;
@@ -709,6 +717,10 @@
 
                 let finished = (pState.score >= pState.max);
                 conn.send({ type: 'update', score: pState.score, errors: pState.errors, finished: finished });
+
+                if (finished) {
+                    document.getElementById('player-playing').classList.add('hidden');
+                }
             };
             grid.appendChild(div);
         });
