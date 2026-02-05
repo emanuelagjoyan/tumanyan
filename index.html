@@ -443,4 +443,276 @@
 
     function localUndo() {
         if (localState.history.length === 0) return;
-        let last
+        let last = localState.history.pop();
+        localState.turn = last.turn;
+        if (last.correct) {
+            localState.scores[last.turn]--;
+            last.div.classList.remove('used', 'correct');
+            let list = document.getElementById(`l-list-${last.turn}`);
+            list.innerText = list.innerText.replace(last.word + ", ", "");
+        }
+        document.getElementById(`l-score-${last.turn}`).innerText = localState.scores[last.turn];
+        const remaining = document.querySelectorAll('#local-grid .word:not(.used)').length;
+        document.getElementById('local-counter').innerText = (localState.totalItems - remaining) + " / " + localState.totalItems;
+        updateLocalUI();
+    }
+
+    function updateLocalUI() {
+        for(let i=1; i<=3; i++) document.getElementById(`l-team-${i}`).classList.toggle('turn', i === localState.turn);
+        document.getElementById('local-msg').innerText = `Հերթը՝ Թիմ ${localState.turn}`;
+    }
+
+    function forceBackToMenu() {
+        document.getElementById('winner-overlay').style.display = 'none';
+        goToMainMenu();
+    }
+
+    // --- ONLINE (PEERJS) ---
+    let peer = null;
+    let conn = null;
+    let connections = {}; 
+    let onlineMode = ""; 
+    let myName = "";
+
+    function openOnlinePortal(mode) {
+        onlineMode = mode;
+        showScreen('screen-online-portal');
+        document.getElementById('online-portal-title').innerText = mode === 'solo' ? "ՈՒՇԱԴՐՈՒԹՅՈՒՆ" : "ՀԱՎԱՔԻՐ ՏՈՂԵՐԸ";
+    }
+
+    function setupHost() {
+        let code = Math.floor(1000 + Math.random() * 9000).toString();
+        peer = new Peer("tumo_" + code, peerConfig);
+        
+        peer.on('open', (id) => {
+            document.getElementById('host-code-display').innerText = code;
+            showScreen('screen-host-lobby');
+            renderHostGameList();
+        });
+        peer.on('connection', (c) => {
+            c.on('data', (data) => handleHostData(c, data));
+            c.on('close', () => { delete connections[c.peer]; updateHostPlayerList(); });
+        });
+        peer.on('error', (err) => alert("Կապի սխալ: Փորձեք նորից: " + err.type));
+    }
+
+    function renderHostGameList() {
+        const list = document.getElementById('host-game-list');
+        list.innerHTML = "";
+        DB[onlineMode].forEach((g) => {
+            let btn = document.createElement('button');
+            btn.className = 'btn btn-blue';
+            btn.innerText = g.name;
+            btn.onclick = () => startOnlineGame(g);
+            list.appendChild(btn);
+        });
+    }
+
+    function startOnlineGame(game) {
+        Object.values(connections).forEach(c => c.send({ type: 'start', game: game, mode: onlineMode }));
+        showScreen('screen-host-live');
+        document.getElementById('live-game-title').innerText = game.name;
+        document.getElementById('live-leaderboard').innerHTML = "";
+        Object.values(connections).forEach(c => {
+            c.metadata.score = 0; c.metadata.errors = 0; c.metadata.finished = false;
+            c.metadata.max = (onlineMode==='solo') ? 10 : game.data.length;
+        });
+        updateLeaderboard();
+    }
+
+    function handleHostData(c, data) {
+        if (data.type === 'join') {
+            c.metadata = { name: data.name, score:0, errors:0, finished:false, max:10, peerId: c.peer };
+            connections[c.peer] = c;
+            updateHostPlayerList();
+        } else if (data.type === 'update') {
+            c.metadata.score = data.score;
+            c.metadata.errors = data.errors;
+            c.metadata.finished = data.finished;
+            updateLeaderboard();
+        }
+    }
+
+    function updateHostPlayerList() {
+        const div = document.getElementById('host-player-list');
+        div.innerHTML = "";
+        Object.values(connections).forEach(c => {
+            let tag = document.createElement('span');
+            tag.className = 'player-tag';
+            tag.innerText = c.metadata.name;
+            div.appendChild(tag);
+        });
+    }
+
+    function updateLeaderboard() {
+        const board = document.getElementById('live-leaderboard');
+        board.innerHTML = "";
+        let players = Object.values(connections).map(c => c.metadata);
+        players.sort((a,b) => {
+            if (a.finished && !b.finished) return -1;
+            if (!a.finished && b.finished) return 1;
+            return b.score - a.score;
+        });
+        players.forEach(p => {
+            let pct = (p.score / p.max) * 100;
+            let row = document.createElement('div');
+            row.className = 'lb-row';
+            row.style.border = p.finished ? "2px solid #ffd700" : "none";
+            row.innerHTML = `<div class="lb-name">${p.name} ${p.finished?'🏆':''}</div><div class="lb-stat">${p.score}/${p.max}</div><div class="lb-stat" style="color:#c0392b">❌ ${p.errors}</div><div class="bar-container"><div class="bar-fill" style="width:${pct}%"></div></div>`;
+            board.appendChild(row);
+        });
+    }
+
+    function endOnlineGame() {
+        let players = Object.values(connections).map(c => c.metadata);
+        
+        // Sorting: 1. Finished, 2. Fewest Errors, 3. High Score
+        players.sort((a,b) => {
+            if (a.finished && !b.finished) return -1;
+            if (!a.finished && b.finished) return 1;
+            if (a.finished) return a.errors - b.errors; 
+            return b.score - a.score;
+        });
+
+        let html = '<table class="winner-table">';
+        let currentRank = 1;
+
+        for (let i = 0; i < players.length; i++) {
+            if (i > 0) {
+                let prev = players[i-1];
+                let curr = players[i];
+                let tie = false;
+                if (prev.finished && curr.finished) {
+                    if (prev.errors === curr.errors) tie = true;
+                } else if (!prev.finished && !curr.finished) {
+                    if (prev.score === curr.score) tie = true;
+                }
+                if (!tie) currentRank = i + 1;
+            }
+
+            // SEND PERSONAL RESULT
+            let conn = connections[players[i].peerId];
+            if (conn) {
+                conn.send({
+                    type: 'gameOver',
+                    rank: currentRank,
+                    errors: players[i].errors,
+                    finished: players[i].finished
+                });
+            }
+
+            let cls = currentRank === 1 ? 'rank-1' : (currentRank === 2 ? 'rank-2' : 'rank-3');
+            let icon = currentRank === 1 ? '🥇' : (currentRank === 2 ? '🥈' : '🥉');
+            if (currentRank > 3) icon = `#${currentRank}`;
+            let status = players[i].finished ? `${players[i].errors} Սխալ` : `Չի ավարտել (${players[i].score})`;
+
+            html += `<tr><td class="${cls}">${icon}</td><td class="${cls}"><span class="winner-team-name">${players[i].name}</span></td><td class="winner-stats" style="color:#fff">${status}</td></tr>`;
+        }
+        html += '</table>';
+
+        document.getElementById('final-winner-title').innerText = "ԱՐԴՅՈՒՆՔՆԵՐ";
+        document.getElementById('winner-name').innerHTML = html;
+        document.getElementById('winner-overlay').classList.remove('hidden');
+        document.getElementById('winner-overlay').style.display = 'flex';
+        document.getElementById('screen-host-live').classList.add('hidden');
+    }
+
+    // --- PLAYER ---
+    function joinRoom() {
+        myName = document.getElementById('p-name').value;
+        let code = document.getElementById('p-code').value;
+        if (!myName || !code) return alert("Լրացրեք տվյալները");
+        
+        peer = new Peer(null, peerConfig);
+        peer.on('open', () => {
+            conn = peer.connect("tumo_" + code);
+            conn.on('open', () => {
+                conn.send({ type: 'join', name: myName });
+                showScreen('screen-player');
+                document.getElementById('player-waiting').classList.remove('hidden');
+                document.getElementById('player-playing').classList.add('hidden');
+                document.getElementById('player-final-screen').style.display = 'none';
+            });
+            conn.on('data', (data) => {
+                if (data.type === 'start') initPlayerGame(data.game, data.mode);
+                if (data.type === 'gameOver') showPlayerResult(data);
+            });
+            conn.on('error', () => alert("Սենյակը չգտնվեց"));
+        });
+    }
+
+    function showPlayerResult(data) {
+        document.getElementById('player-playing').classList.add('hidden');
+        const screen = document.getElementById('player-final-screen');
+        screen.style.display = 'flex';
+        
+        let icon = data.rank === 1 ? '🥇' : (data.rank === 2 ? '🥈' : (data.rank === 3 ? '🥉' : ''));
+        let title = data.rank === 1 ? 'ՀԱՂԹԱՆԱԿ' : `${data.rank}-րդ ՏԵՂ`;
+        let color = data.rank === 1 ? '#ffd700' : '#fff';
+
+        document.getElementById('p-final-rank').innerText = icon;
+        document.getElementById('p-final-title').innerText = title;
+        document.getElementById('p-final-title').style.color = color;
+        document.getElementById('p-final-stats').innerText = `Սխալներ՝ ${data.errors}`;
+        
+        let msg = "";
+        if (data.rank === 1) msg = "Շնորհավորում ենք, հիանալի արդյունք:";
+        else if (data.rank <= 3) msg = "Շատ լավ արդյունք:";
+        else msg = "Լավ փորձ էր:";
+        
+        document.getElementById('p-final-msg').innerText = msg;
+    }
+
+    let pState = { score:0, errors:0, seqIdx:0, max:0 };
+
+    function initPlayerGame(game, mode) {
+        document.getElementById('player-waiting').classList.add('hidden');
+        document.getElementById('player-playing').classList.remove('hidden');
+        document.getElementById('player-final-screen').style.display = 'none';
+        
+        document.getElementById('player-target').innerText = game.target;
+        
+        const collectedBox = document.getElementById('player-collected-lines');
+        collectedBox.innerText = "";
+        if (mode === 'sequence') collectedBox.classList.remove('hidden');
+        else collectedBox.classList.add('hidden');
+
+        const grid = document.getElementById('player-grid');
+        grid.innerHTML = "";
+        
+        pState = { score:0, errors:0, seqIdx:0, max: (mode==='solo'?10:game.data.length) };
+        let items = [...game.data].sort(() => Math.random() - 0.5);
+
+        items.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'word';
+            div.innerText = item.w;
+            div.onclick = () => {
+                if (div.classList.contains('used') || div.classList.contains('error')) return;
+                
+                let correct = false;
+                if (mode === 'solo') {
+                    if (item.c === 1) { correct = true; pState.score++; }
+                    else { pState.errors++; }
+                } else {
+                    if (item.order === pState.seqIdx) { correct = true; pState.score++; pState.seqIdx++; }
+                    else { pState.errors++; }
+                }
+
+                if (correct) {
+                    div.classList.add('used', 'correct');
+                    if (mode === 'sequence') collectedBox.innerText += item.w + "\n";
+                } else {
+                    div.classList.add('error');
+                    setTimeout(() => div.classList.remove('error'), 500);
+                }
+
+                let finished = (pState.score >= pState.max);
+                conn.send({ type: 'update', score: pState.score, errors: pState.errors, finished: finished });
+            };
+            grid.appendChild(div);
+        });
+    }
+</script>
+</body>
+</html>
