@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Թումանյանական Աշխարհ</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        :root { --bg: #051e11; --card-bg: #0f3621; --accent: #d4a017; --text: #f0f7f4; --wrong: #c0392b; --correct: #27ae60; }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; flex-direction: column; align-items: center; 
+            margin: 0; padding: 5px; 
+            min-height: 100vh;
+            overflow-x: hidden; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hidden { display: none !important; }
+        h1 { margin: 10px 0; text-align: center; color: var(--accent); text-shadow: 0 0 10px rgba(212,160,23,0.3); font-size: 28px; }
+        @media (min-width: 768px) { h1 { font-size: 36px; } }
+        .subtitle { color: #8fbc8f; margin-bottom: 20px; font-style: italic; text-align: center; font-size: 14px; }
+        
+        /* --- ՑԱՆՑԻ ԿԱՐԳԱՎՈՐՈՒՄՆԵՐ (GRID) --- */
+        /* Այստեղ է ուղղումը՝ ՄԻՇՏ 7 ՍՅՈՒՆԱԿ */
+        .grid { 
+            display: grid; 
+            width: 100%; 
+            max-width: 1200px; 
+            margin: 0 auto;
+            gap: 4px; /* Փոքր արանք հեռախոսի համար */
+            padding-bottom: 40px;
+            grid-template-columns: repeat(7, 1fr) !important; /* ՊԱՐՏԱԴԻՐ 7 ՍՅՈՒՆԱԿ */
+        }
+
+        /* Բառերի ոճավորում */
+        .word { 
+            background: #e8f5e9; color: #051e11; 
+            border-radius: 4px; cursor: pointer; text-align: center; 
+            font-weight: 700; 
+            font-size: 9px; /* Շատ փոքր տառեր, որ 7 հատը տեղավորվեն */
+            padding: 2px;
+            min-height: 45px; 
+            display: flex; align-items: center; justify-content: center; 
+            transition: 0.1s; box-shadow: 0 2px 0 #2e5c44; 
+            word-break: break-word; line-height: 1.1;
+            hyphens: auto;
+        }
+
+        /* Համակարգչի համար (մեծ էկրան) */
+        @media (min-width: 768px) {
+            .grid { gap: 10px; }
+            .word { font-size: 16px; padding: 10px; min-height: 70px; border-radius: 8px; box-shadow: 0 4px 0 #2e5c44; }
+        }
+
+        .word:active { transform: translateY(2px); box-shadow: none; }
+        .word.used { opacity: 0; pointer-events: none; transform: scale(0.5); transition: 0.3s; }
+        .word.error { background: var(--wrong); color: white; animation: shake 0.4s; }
+        .word.correct { background: var(--correct); color: white; }
+
+        /* Մենյու */
+        .main-menu-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; width: 100%; }
+        .main-card { width: 100%; max-width: 300px; height: 150px; background: linear-gradient(145deg, #0f3621, #0a2516); border: 3px solid var(--accent); border-radius: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5); text-align: center; padding: 10px; margin: 5px; }
+        @media (min-width: 768px) { .main-card { height: 220px; padding: 15px; margin: 10px; } }
+        .main-card:active, .main-card:hover { transform: scale(0.98); background: var(--accent); }
+        .main-card:active h2, .main-card:hover h2 { color: #051e11; }
+        .main-card h2 { color: var(--accent); margin: 0; font-size: 20px; }
+        .main-card p { color: #aaa; margin-top: 5px; font-size: 12px; }
+
+        /* Տեղային Խաղ */
+        .local-game-container { width: 100%; max-width: 1400px; display: flex; flex-direction: column; align-items: center; }
+        .teams-row { display: flex; width: 100%; gap: 5px; margin-bottom: 10px; }
+        .team-card { flex: 1; background: var(--card-bg); padding: 5px; border-radius: 8px; border: 2px solid #2e5c44; text-align: center; transition: 0.3s; min-width: 0; }
+        .team-card.turn { border-color: var(--accent); background: #14402a; box-shadow: 0 0 10px var(--accent); }
+        .team-name { font-size: 14px; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .team-score { font-size: 24px; font-weight: 900; color: #fff; margin: 2px 0; }
+        .team-list { height: 50px; overflow-y: auto; text-align: left; color: #a8d5ba; font-size: 10px; border-top: 1px solid #2e5c44; margin-top: 2px; padding-top: 2px; }
+        @media (min-width: 768px) {
+            .teams-row { gap: 15px; margin-bottom: 20px; }
+            .team-card { padding: 15px; border-radius: 12px; }
+            .team-name { font-size: 24px; }
+            .team-score { font-size: 60px; }
+            .team-list { height: 100px; font-size: 16px; }
+        }
+
+        /* Օնլայն Լոբբի */
+        .lobby-box { background: rgba(15, 54, 33, 0.95); padding: 20px; border-radius: 20px; border: 2px solid var(--accent); text-align: center; max-width: 500px; width: 95%; margin-top: 10px; }
+        .room-code { font-size: 30px; letter-spacing: 3px; background: black; color: white; padding: 10px; border-radius: 10px; display: inline-block; margin: 10px 0; border: 2px dashed var(--accent); }
+        input { padding: 10px; font-size: 16px; border-radius: 10px; width: 90%; margin: 10px 0; text-align: center; box-sizing: border-box; }
+        .player-list { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
+        .player-tag { background: #14402a; padding: 5px 10px; border-radius: 15px; border: 1px solid var(--accent); font-weight: bold; font-size: 12px; }
+
+        /* Կոճակներ */
+        .btn { padding: 10px 20px; font-size: 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; margin: 5px; transition: 0.2s; width: 100%; max-width: 250px; }
+        .btn-gold { background: var(--accent); color: #051e11; }
+        .btn-blue { background: #2980b9; }
+        .btn-red { background: #c0392b; }
+        .btn-back { position: fixed; top: 10px; left: 10px; background: #34495e; font-size: 12px; padding: 5px 10px; z-index: 1000; width: auto; }
+
+        /* Leaderboard */
+        .leaderboard { width: 100%; max-width: 800px; margin-top: 20px; padding: 0 5px; box-sizing: border-box; }
+        .lb-row { display: flex; align-items: center; background: #14402a; margin-bottom: 5px; padding: 10px; border-radius: 8px; }
+        .lb-name { flex: 1; text-align: left; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lb-stat { margin: 0 5px; font-size: 16px; min-width: 30px; text-align: right; }
+        .bar-container { flex: 1; background: #051e11; height: 8px; border-radius: 4px; margin: 0 5px; overflow: hidden; display: none; }
+        @media (min-width: 500px) { .bar-container { display: block; } }
+        .bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s; }
+
+        /* Player Screen Elements */
+        #player-collected-lines {
+            width: 90%; min-height: 40px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--accent);
+            border-radius: 10px; margin-bottom: 10px; padding: 10px;
+            color: #ffd700; font-style: italic; font-size: 14px;
+            line-height: 1.4; white-space: pre-line; text-align: left;
+        }
+        
+        #player-final-screen {
+            display: none; width: 100%; flex-direction: column; align-items: center; text-align: center; animation: fadeIn 0.5s; padding-top: 50px;
+        }
+        .result-rank { font-size: 60px; margin: 10px 0; }
+        .result-title { font-size: 28px; font-weight: bold; color: var(--accent); margin-bottom: 10px; }
+        .result-stats { font-size: 20px; color: white; margin-bottom: 20px; }
+        .result-msg { font-size: 18px; color: #8fbc8f; font-style: italic; padding: 0 20px; }
+
+        /* Winner Overlay (Host) */
+        #winner-overlay { 
+            display: none; position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(5,30,17,0.98); 
+            z-index: 2147483647; 
+            flex-direction: column; align-items: center; justify-content: center; text-align: center; 
+            padding: 10px; box-sizing: border-box;
+        }
+
+        .winner-table { width: 100%; max-width: 700px; text-align: left; border-collapse: collapse; margin-top: 10px; background: rgba(0,0,0,0.5); border-radius: 15px; padding: 10px; }
+        .winner-table td { padding: 8px; border-bottom: 1px solid #444; vertical-align: middle; }
+        .winner-team-name { font-size: 22px; font-weight: 900; display: block; margin-bottom: 2px; } 
+        .winner-stats { font-size: 14px; color: #aaa; font-weight: normal; } 
+        
+        .rank-1 .winner-team-name { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); } 
+        .rank-2 .winner-team-name { color: #c0c0c0; } 
+        .rank-3 .winner-team-name { color: #cd7f32; } 
+
+        #local-counter { position: absolute; top: 5px; right: 5px; font-size: 12px; color: var(--accent); font-weight: bold; background: #000; padding: 3px 8px; border-radius: 5px; }
+        @media (min-width: 768px) { #local-counter { top: 10px; right: 10px; font-size: 18px; padding: 5px 10px; } }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <button class="btn btn-back hidden" id="global-back-btn" onclick="goToMainMenu()">🏠</button>
+
+    <div id="screen-main-menu">
+        <h1>ԹՈՒՄԱՆՅԱՆԱԿԱՆ ԱՇԽԱՐՀ</h1>
+        <div class="subtitle">Ընտրեք խաղի ձևաչափը</div>
+        
+        <div class="main-menu-grid">
+            <div class="main-card" onclick="startLocalMode()">
+                <h2>3 Թիմերի Պայքար</h2>
+                <p>Սովորական ռեժիմ<br>(6 Խաղ)</p>
+            </div>
+            <div class="main-card" onclick="openOnlinePortal('solo')">
+                <h2>Ուշադրության Փորձություն</h2>
+                <p>Օնլայն (Հեռախոսներով)</p>
+            </div>
+            <div class="main-card" onclick="openOnlinePortal('sequence')">
+                <h2>Հավաքիր Տողերը</h2>
+                <p>Օնլայն (Հեռախոսներով)</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-local-game" class="local-game-container hidden">
+        <h1 style="margin-top:0;">3 Թիմերի Պայքար</h1>
+        <div id="local-menu" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:20px;"></div>
+        
+        <div id="local-game-board" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; position:relative;">
+            <div id="local-counter">0 / 28</div>
+            <h2 id="local-game-title" style="text-align:center; color:var(--accent); font-size: 20px;"></h2>
+            <div id="local-msg" style="text-align:center; font-size:16px; margin:5px;">Սկսում է Թիմ 1-ը</div>
+            
+            <div class="teams-row" id="local-teams"></div>
+            <div class="grid" id="local-grid"></div>
+            <div style="text-align:center; margin-top:5px;">
+                <button class="btn btn-gold" onclick="localUndo()">↺ ՀԵՏ ՏԱԼ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-online-portal" class="hidden lobby-box">
+        <h1 id="online-portal-title"></h1>
+        <button class="btn btn-gold" onclick="setupHost()">ՍՏԵՂԾԵԼ ՍԵՆՅԱԿ<br><span style="font-size:12px">(Ուսուցիչ/Էկրան)</span></button>
+        <div style="margin:20px; border-top:1px solid #555"></div>
+        <input type="text" id="p-name" placeholder="Քո Անունը">
+        <input type="number" id="p-code" placeholder="Սենյակի Կոդը">
+        <button class="btn btn-blue" onclick="joinRoom()">ՄԻԱՆԱԼ<br><span style="font-size:12px">(Աշակերտ/Հեռախոս)</span></button>
+    </div>
+
+    <div id="screen-host-lobby" class="hidden lobby-box">
+        <h2>ՍԵՆՅԱԿԻ ԿՈԴԸ</h2>
+        <div class="room-code" id="host-code-display"></div>
+        <p>Սպասում ենք մասնակիցներին...</p>
+        <div class="player-list" id="host-player-list"></div>
+        <div style="margin-top:20px; border-top:1px solid #555; padding-top:10px;">
+            <h3>Ընտրեք խաղը</h3>
+            <div id="host-game-list" style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;"></div>
+        </div>
+    </div>
+
+    <div id="screen-host-live" class="hidden" style="width:100%; text-align:center;">
+        <h1 id="live-game-title">Խաղը ընթանում է</h1>
+        <div class="leaderboard" id="live-leaderboard" style="margin: 0 auto;"></div>
+        <button class="btn btn-red" style="margin-top:20px; font-size:20px; padding:10px 30px;" onclick="endOnlineGame()">ԱՎԱՐՏԵԼ ԵՎ ԱՄՓՈՓԵԼ</button>
+    </div>
+
+    <div id="screen-player" class="hidden" style="width:100%; text-align:center;">
+        <div id="player-waiting">
+            <h1>ՍՊԱՍՈՒՄ ԵՆՔ...</h1>
+            <p>Նայեք մեծ էկրանին</p>
+        </div>
+        <div id="player-playing" class="hidden">
+            <h3 id="player-target" style="color:var(--accent); font-size:16px; margin: 10px 0;"></h3>
+            <div id="player-collected-lines" class="hidden"></div>
+            <div class="grid" id="player-grid"></div>
+        </div>
+        <div id="player-final-screen">
+            <div class="result-rank" id="p-final-rank"></div>
+            <div class="result-title" id="p-final-title"></div>
+            <div class="result-stats" id="p-final-stats"></div>
+            <div class="result-msg" id="p-final-msg"></div>
+        </div>
+    </div>
+
+    <div id="winner-overlay">
+        <h1 class="win-title" id="final-winner-title" style="font-size: 36px; margin-bottom: 10px; color: var(--accent);"></h1>
+        <div id="winner-name" style="width:100%; display:flex; justify-content:center;"></div>
+        <button class="btn back-btn" style="margin-top: 20px; font-size: 18px; background: var(--accent); color: #000; position:static;" onclick="forceBackToMenu()">🏠 ՄԵՆՅՈՒ</button>
+    </div>
+
+<script>
+    const peerConfig = { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
+
+    // --- ՏՎՅԱԼՆԵՐ ---
+    const DB = {
+        standard: [
+            { name: "Հեքիաթի Հերոսներ", teams: ["ՁԱԽՈՐԴ ՓԱՆՈՍ", "ՔԱՋ ՆԱԶԱՐ", "ՍՈՒՏԼԻԿ ՈՐՍԿԱՆ"], data: [
+                { w: "Կացին", c:1}, { w: "Բադ", c:1}, { w: "Անհաջողակ", c:1}, { w: "Լճափ", c:1}, { w: "Չարչիներ", c:1}, { w: "Տապակած ձուկ", c:1}, { w: "Կոտրած ոտք", c:3}, { w: "Անտառ", c:1},
+                { w: "Ճանճ", c:2}, { w: "Կոտրած կուժ", c:2}, { w: "Վախկոտ", c:2}, { w: "Տիգրանուհի", c:2}, { w: "Հսկաներ", c:2}, { w: "Կանաչ դրոշակ", c:2}, { w: "Թագավոր", c:2}, { w: "Ավանակ", c:2},
+                { w: "Անորս որս", c:3}, { w: "Շամփուր", c:3}, { w: "Երեք գյուղ", c:3}, { w: "Պոչատ", c:3}, { w: "Անթև", c:3}, { w: "Դանակ", c:3}, { w: "Բադեր", c:3}, { w: "Հորս կնունքը", c:3},
+                { w: "Հումորային", c:[1,2,3]}, { w: "Ժողովրդական", c:[1,2,3]}, { w: "Սուտ", c:[2,3]}, { w: "Ճամփորդություն", c:[1,2]}
+            ]},
+            { name: "Պոեմների Հերոսներ", teams: ["ԱՆՈՒՇ (ՍԱՐՈ)", "ԹՄԿԱԲԵՐԴ (ԹԱԹՈՒԼ)", "ՓԱՐՎԱՆԱ"], data: [
+                { w: "Սարո", c:1}, { w: "Մոսի", c:1}, { w: "Համբարձում", c:1}, { w: "Լոռվա ձոր", c:1}, { w: "Հարսանիք", c:1}, { w: "Վիշապ", c:1}, { w: "Սարեր", c:1}, { w: "Դեբեդ", c:1},
+                { w: "Շահ", c:2}, { w: "Գինի", c:2}, { w: "Դավաճանություն", c:2}, { w: "Սևաչյա կին", c:2}, { w: "Ջավախք", c:2}, { w: "Հաղթանակ", c:2}, { w: "Անմահություն", c:2}, { w: "Թաթուլ", c:2},
+                { w: "Կրակ", c:3}, { w: "Թիթեռ", c:3}, { w: "Անմար սեր", c:3}, { w: "Կտրիճներ", c:3}, { w: "Աղջիկ", c:3}, { w: "Լիճ", c:3}, { w: "Փարվանա", c:3}, { w: "Լաց", c:3},
+                { w: "Սեր", c:[1,2,3]}, { w: "Ողբերգություն", c:[1,2,3]}, { w: "Ավանդազրույց", c:[2,3]}, { w: "Գյուղական կյանք", c:1}
+            ]},
+            { name: "Ստեղծագործություններ", teams: ["ՇՈՒՆՆ ՈՒ ԿԱՏՈՒՆ", "ԳԻՔՈՐԸ", "ՄԻ ԿԱԹԻԼ ՄԵՂՐԸ"], data: [
+                { w: "Գդակ", c:1}, { w: "Մորթի", c:1}, { w: "Քեռի Քուչի", c:1}, { w: "Ցուրտ", c:1}, { w: "Դատարան", c:1}, { w: "Վկաներ", c:1}, { w: "Գլուխն առած", c:1}, { w: "Կաշի", c:1},
+                { w: "Համբո", c:2}, { w: "Բազազ Արտեմ", c:2}, { w: "Թիֆլիս", c:2}, { w: "Դուքան", c:2}, { w: "Կարոտ", c:2}, { w: "Սալոր", c:2}, { w: "«Էստի համեցեք»", c:2}, { w: "Ծեծ", c:2},
+                { w: "Մեղր", c:3}, { w: "Խանութպան", c:3}, { w: "Հովիվ", c:3}, { w: "Պատերազմ", c:3}, { w: "Թագավոր", c:3}, { w: "Ճանճ", c:3}, { w: "Ավերակ", c:3}, { w: "Գյուղացի", c:3},
+                { w: "Կենդանիներ", c:[1,3]}, { w: "Վիճաբանություն", c:[1,3]}, { w: "Քաղաք", c:2}, { w: "Ձմեռ", c:[1,2]}
+            ]},
+            { name: "Խորամանկություն", teams: ["ՊՈՉԱՏ ԱՂՎԵՍԸ", "ՉԱՐԻ ՎԵՐՋԸ", "ԿԻԿՈՍԻ ՄԱՀԸ"], data: [
+                { w: "Պառավ", c:1}, { w: "Կաթ", c:1}, { w: "Կցել", c:1}, { w: "Ծառ", c:3}, { w: "Աղբյուր", c:1}, { w: "Կով", c:1}, { w: "Արտ", c:1}, { w: "Չարչի", c:1},
+                { w: "Կկու", c:2}, { w: "Աղվես", c:2}, { w: "Ագռավ", c:2}, { w: "Ձագուկներ", c:2}, { w: "Սարի լանջ", c:2}, { w: "Երկաթե", c:2}, { w: "Դարբին", c:2}, { w: "Թակարդ", c:2},
+                { w: "Հիմարություն", c:3}, { w: "Ողբ", c:3}, { w: "Ծառ", c:3}, { w: "Քար", c:3}, { w: "Հորաքույր", c:3}, { w: "Խնամիներ", c:3}, { w: "Ալյուր", c:3}, { w: "Գոմ", c:3},
+                { w: "Խորամանկություն", c:[1,2]}, { w: "Սուգ", c:3}, { w: "Անտառ", c:2}, { w: "Ճանապարհորդություն", c:1}
+            ]},
+            { name: "Սոցիալական Հեքիաթներ", teams: ["ՏԵՐՆ ՈՒ ԾԱՌԱՆ", "ՈՍԿՈՒ ԿԱՐԱՍԸ", "ԲԱՐԵԿԵՆԴԱՆԸ"], data: [
+                { w: "Սիմոն", c:1}, { w: "Մաթոս", c:1}, { w: "Պայման", c:1}, { w: "Բարկանալ", c:1}, { w: "Քիթ կտրել", c:1}, { w: "Հազար մանեթ", c:1}, { w: "Ոչխարներ", c:1}, { w: "Անխիղճ", c:1},
+                { w: "Հողագործ", c:2}, { w: "Օձ", c:2}, { w: "Ոսկի", c:2}, { w: "Թագավոր", c:2}, { w: "Վեճ", c:2}, { w: "Կարաս", c:2}, { w: "Ազնվություն", c:2}, { w: "Բախտ", c:2},
+                { w: "Մարդ ու Կին", c:3}, { w: "Յուղ ու բրինձ", c:3}, { w: "Հիմար մարդիկ", c:3}, { w: "Ձիավոր", c:3}, { w: "Փախուստ", c:3}, { w: "«Բարեկենդան»", c:3}, { w: "Վրեժ", c:1}, { w: "Խաբեություն", c:3},
+                { w: "Հարստություն", c:[2,3]}, { w: "Աշխատանք", c:[1,2]}, { w: "Ագահություն", c:1}, { w: "Ծիծաղ", c:3}
+            ]},
+            { name: "Խրատական", teams: ["ՄԻ ԿԱԹԻԼ ՄԵՂՐԸ", "ԽԵԼՈՔՆ ՈՒ ՀԻՄԱՐԸ", "ՍՈՒՏԱՍԱՆԸ"], data: [
+                { w: "Մեղր", c:1}, { w: "Ճանճ", c:1}, { w: "Կատու", c:1}, { w: "Շուն", c:1}, { w: "Խանութպան", c:1}, { w: "Գյուղացի", c:1}, { w: "Պատերազմ", c:1}, { w: "Ավերակ", c:1},
+                { w: "Երկու եղբայր", c:2}, { w: "Ուղևորություն", c:2}, { w: "Կովեր", c:2}, { w: "Եզներ", c:2}, { w: "Հարստություն", c:2}, { w: "Վիճաբանություն", c:2}, { w: "Մորթել", c:2}, { w: "Արդարություն", c:2},
+                { w: "Թագավոր", c:3}, { w: "Ստախոս", c:3}, { w: "Կոտ", c:3}, { w: "Ոսկի", c:3}, { w: "Երեք սուտ", c:3}, { w: "Դարպաս", c:3}, { w: "Հնարամտություն", c:3}, { w: "Գյուղացի", c:3},
+                { w: "Կորուստ", c:1}, { w: "Ճամփորդ", c:2}, { w: "Խելք", c:[2,3]}, { w: "Փոքրից մեծ", c:1}
+            ]}
+        ],
+        solo: [
+            { name: "Կենսագրություն", target: "Գտիր 10 ճիշտ փաստերը", data: [
+                { w: "Դսեղ", c:1}, { w: "1869 թ.", c:1}, { w: "Օլգա", c:1}, { w: "10 զավակ", c:1}, { w: "Վերնատուն", c:1}, { w: "Թիֆլիս", c:1}, { w: "Ներսիսյան", c:1}, { w: "Բանաստեղծ", c:1}, { w: "Հովհաննես", c:1}, { w: "Խրիմյան", c:1},
+                { w: "Սյունիք", c:0}, { w: "1915 թ.", c:0}, { w: "Երևան", c:0}, { w: "Գրիգոր", c:0}, { w: "2 զավակ", c:0}, { w: "Վենետիկ", c:0}, { w: "Ֆրանսիա", c:0}, { w: "Աշուղ", c:0}, { w: "Մոսկվա", c:0}, { w: "Շիրազ", c:0},
+                { w: "Զորավար", c:0}, { w: "Լենինական", c:0}, { w: "Չարենց", c:0}, { w: "Կոմիտաս", c:0}, { w: "Վեպ", c:0}, { w: "Դրամատուրգ", c:0}, { w: "Նկարիչ", c:0}, { w: "1937 թ.", c:0}
+            ]},
+            { name: "Թումանյան թե՞ Ոչ", target: "Գտիր Թումանյանի 10 գործերը", data: [
+                { w: "Անուշ", c:1}, { w: "Թմկաբերդ", c:1}, { w: "Փարվանա", c:1}, { w: "Գիքորը", c:1}, { w: "Շունն ու կատուն", c:1}, { w: "Մի կաթիլ մեղր", c:1}, { w: "Ձախորդ Փանոս", c:1}, { w: "Քաջ Նազար", c:1}, { w: "Սուտլիկ որսկան", c:1}, { w: "Հայրենիքիս հետ", c:1},
+                { w: "Գևորգ Մարզպետունի", c:0}, { w: "Սամվել", c:0}, { w: "Քաոս", c:0}, { w: "Նամուս", c:0}, { w: "Հավերժական սիրով", c:0}, { w: "Խենթը", c:0}, { w: "Պեպո", c:0}, { w: "Վարդանանք", c:0}, { w: "Հացավան", c:0}, { w: "Միրհավ", c:0},
+                { w: "Կարոտ", c:0}, { w: "Պատրանք", c:0}, { w: "Վերք Հայաստանի", c:0}, { w: "Սպիտակ ձիավոր", c:0}, { w: "Ձայն հայրենյաց", c:0}, { w: "Արա Գեղեցիկ", c:0}, { w: "Հին աստվածներ", c:0}, { w: "Աբու-Լալա", c:0}
+            ]},
+            { name: "Հերոսների Պարահանդես", target: "Գտիր Թումանյանի 10 հերոսներին", data: [
+                { w: "Գիքոր", c:1}, { w: "Փանոս", c:1}, { w: "Նազար", c:1}, { w: "Անուշ", c:1}, { w: "Սարո", c:1}, { w: "Համբո", c:1}, { w: "Սուտլիկ", c:1}, { w: "Թաթուլ", c:1}, { w: "Նադիր Շահ", c:1}, { w: "Մոսի", c:1},
+                { w: "Պեպո", c:0}, { w: "Սամվել", c:0}, { w: "Սեյրան", c:0}, { w: "Սուսան", c:0}, { w: "Աբիսողոմ", c:0}, { w: "Պաղտասար", c:0}, { w: "Վարդան", c:0}, { w: "Սմբատ", c:0}, { w: "Սոֆի", c:0}, { w: "Արա", c:0},
+                { w: "Խենթը", c:0}, { w: "Մազութի Համո", c:0}, { w: "Շուշանիկ", c:0}, { w: "Մարան", c:0}, { w: "Աշոտ", c:0}, { w: "Զիմզիմով", c:0}, { w: "Էլիզբարով", c:0}, { w: "Մարզպետունի", c:0}
+            ]}
+        ],
+        sequence: [
+            { name: "Բանաստեղծություն №1", realName: "Շունն ու Կատուն", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+                { w: "Ժամանակով Կատուն ճոն էր,", order:0}, { w: "Շունն էլ գըլխին գըդակ չուներ,", order:1},
+                { w: "Միայն, գիտեմ ոչ` որդիանց որդի,", order:2}, { w: "Ճանկել էր մի գառան մորթի:", order:3},
+                { w: "Եկավ մի օր, ձմեռվան մըտին,", order:4}, { w: "Կատվի կուշտը տարավ մորթին:", order:5},
+                { w: "— Բարի աջողում, ուստա Փիսո,", order:6}, { w: "Գլուխըս մըրսեց, ի սեր Աստծո,", order:7},
+                { w: "Ա՛ռ էս մորթին ու ինձ համար", order:8}, { w: "Մի գդակ կարի գըլխիս հարմար:", order:9}
+            ]},
+            { name: "Բանաստեղծություն №2", realName: "Առաջին ձյունը", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+                { w: "― Վա՜յ, մայրի՛կ ջան, տե՜ս,", order:0}, { w: "Բակն ու դուռը լի", order:1},
+                { w: "Ինչքա՜ն սպիտակ", order:2}, { w: "Թիթեռ է գալի...", order:3},
+                { w: "Էսքան շատ թիթեռ", order:4}, { w: "Չեմ տեսել ես դեռ։", order:5},
+                { w: "― Չէ՛, իմ անուշիկ,", order:6}, { w: "Թիթեռներ չեն էտ.", order:7},
+                { w: "Թիթեռներն անցան", order:8}, { w: "Ծաղիկների հետ։", order:9},
+                { w: "Էտ ձյունն է գալի,", order:10}, { w: "Փաթիլն է ձյունի,", order:11},
+                { w: "Որ կարծես սպիտակ", order:12}, { w: "Թիթեռնիկ լինի։", order:13}
+            ]},
+            { name: "Բանաստեղծություն №3", realName: "Անուշ (Հատված)", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+                { w: "Ա՜խ, ի՜նչ լավ են սարի վըրա", order:0}, { w: "Անցնում օրերն, անո՜ւշ, անո՜ւշ,", order:1},
+                { w: "Անըրջային, թեթևասահ", order:2}, { w: "Ամպ ու հովերն անո՜ւշ, անո՜ւշ։", order:3},
+                { w: "Ահա բացվեց թարմ առավոտ", order:4}, { w: "Վարդ է թափում սարին-քարին,", order:5},
+                { w: "Շաղ են շողում ծաղիկ ու խոտ,", order:6}, { w: "Շընչում բուրմունք եդեմային։", order:7},
+                { w: "Ա՜խ, ի՜նչ հեշտ են սարի վըրա", order:8}, { w: "Սահում ժամերն անո՜ւշ, անո՜ւշ,", order:9},
+                { w: "Շըվին փըչեց հովիվն ահա―", order:10}, { w: "Աղջիկն ու սերն անո՜ւշ, անո՜ւշ։", order:11}
+            ]}
+        ]
+    };
+
+    function showScreen(id) {
+        document.querySelectorAll('body > div').forEach(d => d.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        if (id === 'screen-main-menu') {
+            document.getElementById('global-back-btn').classList.add('hidden');
+        } else {
+            document.getElementById('global-back-btn').classList.remove('hidden');
+        }
+    }
+
+    function goToMainMenu() {
+        if (peer) { peer.destroy(); peer = null; conn = null; connections = {}; }
+        showScreen('screen-main-menu');
+    }
+
+    // --- LOCAL MODE (3 TEAMS) ---
+    let localState = { turn: 1, scores: {1:0, 2:0, 3:0}, history: [], totalItems: 0 };
+
+    function startLocalMode() {
+        showScreen('screen-local-game');
+        const menu = document.getElementById('local-menu');
+        menu.innerHTML = "";
+        document.getElementById('local-game-board').classList.add('hidden');
+        DB.standard.forEach((game) => {
+            let btn = document.createElement('button');
+            btn.className = 'btn btn-gold';
+            btn.innerText = game.name;
+            btn.onclick = () => initLocalGame(game);
+            menu.appendChild(btn);
+        });
+    }
+
+    function initLocalGame(game) {
+        localState = { turn: 1, scores: {1:0, 2:0, 3:0}, history: [], totalItems: game.data.length };
+        document.getElementById('local-game-title').innerText = game.name;
+        document.getElementById('local-game-board').classList.remove('hidden');
+        document.getElementById('local-counter').innerText = "0 / " + localState.totalItems;
+        
+        const teamsDiv = document.getElementById('local-teams');
+        teamsDiv.innerHTML = "";
+        game.teams.forEach((tName, i) => {
+            teamsDiv.innerHTML += `
+                <div class="team-card ${i+1===1?'turn':''}" id="l-team-${i+1}">
+                    <div class="team-name" contenteditable="true">ԹԻՄ ${i+1}</div>
+                    <div style="font-size:14px; color:#aaa; margin-bottom:5px;">${tName}</div>
+                    <div class="team-score" id="l-score-${i+1}">0</div>
+                    <div class="team-list" id="l-list-${i+1}"></div>
+                </div>`;
+        });
+
+        const grid = document.getElementById('local-grid');
+        grid.innerHTML = "";
+        let items = [...game.data].sort(() => Math.random() - 0.5);
+        items.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'word';
+            div.innerText = item.w;
+            div.onclick = () => handleLocalClick(div, item);
+            grid.appendChild(div);
+        });
+    }
+
+    function handleLocalClick(div, item) {
+        if (div.classList.contains('used')) return;
+        let t = localState.turn;
+        let isCorrect = Array.isArray(item.c) ? item.c.includes(t) : item.c === t;
+        localState.history.push({ div: div, turn: t, correct: isCorrect, word: item.w });
+        
+        if (isCorrect) {
+            localState.scores[t]++;
+            div.classList.add('used', 'correct');
+            document.getElementById(`l-list-${t}`).innerHTML += item.w + ", ";
+        } else {
+            div.classList.add('error');
+            setTimeout(() => div.classList.remove('error'), 500);
+        }
+        
+        document.getElementById(`l-score-${t}`).innerText = localState.scores[t];
+        
+        setTimeout(() => {
+            const remaining = document.querySelectorAll('#local-grid .word:not(.used)').length;
+            document.getElementById('local-counter').innerText = (localState.totalItems - remaining) + " / " + localState.totalItems;
+            if (remaining === 0) finishLocalGame();
+            else { localState.turn = (t % 3) + 1; updateLocalUI(); }
+        }, 100);
+    }
+
+    function finishLocalGame() {
+        let results = [
+            { id: 1, name: document.querySelector(`#l-team-1 .team-name`).innerText, score: localState.scores[1] },
+            { id: 2, name: document.querySelector(`#l-team-2 .team-name`).innerText, score: localState.scores[2] },
+            { id: 3, name: document.querySelector(`#l-team-3 .team-name`).innerText, score: localState.scores[3] }
+        ];
+        results.sort((a, b) => b.score - a.score);
+        let maxScore = results[0].score;
+        let winners = results.filter(r => r.score === maxScore);
+        
+        document.getElementById('final-winner-title').innerText = winners.length > 1 ? "🤝 ՈՉ-ՈՔԻ 🤝" : `🏆 ${winners[0].name} ՀԱՂԹԵՑ 🏆`;
+        let html = '<table class="winner-table">';
+        let currentRank = 1;
+        for (let i = 0; i < results.length; i++) {
+            if (i > 0 && results[i].score < results[i-1].score) currentRank = i + 1;
+            let points = currentRank === 1 ? 2 : (currentRank === 2 ? 1 : 0);
+            let cls = currentRank === 1 ? 'rank-1' : (currentRank === 2 ? 'rank-2' : 'rank-3');
+            let icon = currentRank === 1 ? '🥇' : (currentRank === 2 ? '🥈' : '🥉');
+            html += `<tr><td class="${cls}">${icon}</td><td class="${cls}"><span class="winner-team-name">${results[i].name}</span></td><td class="winner-stats">${results[i].score} բառ</td><td class="winner-stats" style="color:#fff">${points} Միավոր</td></tr>`;
+        }
+        html += '</table>';
+        document.getElementById('winner-name').innerHTML = html;
+        document.getElementById('winner-overlay').style.display = 'flex';
+    }
+
+    function localUndo() {
+        if (localState.history.length === 0) return;
+        let last = localState.history.pop();
+        localState.turn = last.turn;
+        if (last.correct) {
+            localState.scores[last.turn]--;
+            last.div.classList.remove('used', 'correct');
+            let list = document.getElementById(`l-list-${last.turn}`);
+            list.innerText = list.innerText.replace(last.word + ", ", "");
+        }
+        document.getElementById(`l-score-${last.turn}`).innerText = localState.scores[last.turn];
+        const remaining = document.querySelectorAll('#local-grid .word:not(.used)').length;
+        document.getElementById('local-counter').innerText = (localState.totalItems - remaining) + " / " + localState.totalItems;
+        updateLocalUI();
+    }
+
+    function updateLocalUI() {
+        for(let i=1; i<=3; i++) document.getElementById(`l-team-${i}`).classList.toggle('turn', i === localState.turn);
+        document.getElementById('local-msg').innerText = `Հերթը՝ Թիմ ${localState.turn}`;
+    }
+
+    function forceBackToMenu() {
+        document.getElementById('winner-overlay').style.display = 'none';
+        goToMainMenu();
+    }
+
+    // --- ONLINE (PEERJS) ---
+    let peer = null;
+    let conn = null;
+    let connections = {}; 
+    let onlineMode = ""; 
+    let myName = "";
+
+    function openOnlinePortal(mode) {
+        onlineMode = mode;
+        showScreen('screen-online-portal');
+        document.getElementById('online-portal-title').innerText = mode === 'solo' ? "ՈՒՇԱԴՐՈՒԹՅՈՒՆ" : "ՀԱՎԱՔԻՐ ՏՈՂԵՐԸ";
+    }
+
+    function setupHost() {
+        let code = Math.floor(1000 + Math.random() * 9000).toString();
+        peer = new Peer("tumo_" + code, peerConfig);
+        
+        peer.on('open', (id) => {
+            document.getElementById('host-code-display').innerText = code;
+            showScreen('screen-host-lobby');
+            renderHostGameList();
+        });
+        peer.on('connection', (c) => {
+            c.on('data', (data) => handleHostData(c, data));
+            c.on('close', () => { delete connections[c.peer]; updateHostPlayerList(); });
+        });
+        peer.on('error', (err) => alert("Կապի սխալ: Փորձեք նորից: " + err.type));
+    }
+
+    function renderHostGameList() {
+        const list = document.getElementById('host-game-list');
+        list.innerHTML = "";
+        DB[onlineMode].forEach((g) => {
+            let btn = document.createElement('button');
+            btn.className = 'btn btn-blue';
+            btn.innerText = g.name;
+            btn.onclick = () => startOnlineGame(g);
+            list.appendChild(btn);
+        });
+    }
+
+    function startOnlineGame(game) {
+        Object.values(connections).forEach(c => c.send({ type: 'start', game: game, mode: onlineMode }));
+        showScreen('screen-host-live');
+        document.getElementById('live-game-title').innerText = game.name;
+        document.getElementById('live-leaderboard').innerHTML = "";
+        Object.values(connections).forEach(c => {
+            c.metadata.score = 0; c.metadata.errors = 0; c.metadata.finished = false;
+            c.metadata.max = (onlineMode==='solo') ? 10 : game.data.length;
+        });
+        updateLeaderboard();
+    }
+
+    function handleHostData(c, data) {
+        if (data.type === 'join') {
+            c.metadata = { name: data.name, score:0, errors:0, finished:false, max:10, peerId: c.peer };
+            connections[c.peer] = c;
+            updateHostPlayerList();
+        } else if (data.type === 'update') {
+            c.metadata.score = data.score;
+            c.metadata.errors = data.errors;
+            c.metadata.finished = data.finished;
+            updateLeaderboard();
+        }
+    }
+
+    function updateHostPlayerList() {
+        const div = document.getElementById('host-player-list');
+        div.innerHTML = "";
+        Object.values(connections).forEach(c => {
+            let tag = document.createElement('span');
+            tag.className = 'player-tag';
+            tag.innerText = c.metadata.name;
+            div.appendChild(tag);
+        });
+    }
+
+    function updateLeaderboard() {
+        const board = document.getElementById('live-leaderboard');
+        board.innerHTML = "";
+        let players = Object.values(connections).map(c => c.metadata);
+        players.sort((a,b) => {
+            if (a.finished && !b.finished) return -1;
+            if (!a.finished && b.finished) return 1;
+            return b.score - a.score;
+        });
+        players.forEach(p => {
+            let pct = (p.score / p.max) * 100;
+            let row = document.createElement('div');
+            row.className = 'lb-row';
+            row.style.border = p.finished ? "2px solid #ffd700" : "none";
+            row.innerHTML = `<div class="lb-name">${p.name} ${p.finished?'🏆':''}</div><div class="lb-stat">${p.score}/${p.max}</div><div class="lb-stat" style="color:#c0392b">❌ ${p.errors}</div><div class="bar-container"><div class="bar-fill" style="width:${pct}%"></div></div>`;
+            board.appendChild(row);
+        });
+    }
+
+    function endOnlineGame() {
+        Object.values(connections).forEach(c => c.send({ type: 'end' }));
+        showOnlineWinners();
+    }
+
+    function showOnlineWinners() {
+        let players = Object.values(connections).map(c => c.metadata);
+        
+        // Sorting: 1. Finished, 2. Fewest Errors
+        players.sort((a,b) => {
+            if (a.finished && !b.finished) return -1;
+            if (!a.finished && b.finished) return 1;
+            if (a.finished) return a.errors - b.errors; // Less errors wins
+            return b.score - a.score; // If not finished, more score wins
+        });
+
+        let html = '<table class="winner-table">';
+        let currentRank = 1;
+
+        for (let i = 0; i < players.length; i++) {
+            if (i > 0) {
+                let prev = players[i-1];
+                let curr = players[i];
+                // Same Rank if both finished and same errors
+                if (prev.finished && curr.finished && prev.errors === curr.errors) { /* Same rank */ }
+                else currentRank = i + 1;
+            }
+
+            // SEND PERSONAL RESULT
+            let conn = connections[players[i].peerId];
+            if (conn) {
+                conn.send({
+                    type: 'gameOver',
+                    rank: currentRank,
+                    errors: players[i].errors,
+                    finished: players[i].finished
+                });
+            }
+
+            let cls = currentRank === 1 ? 'rank-1' : (currentRank === 2 ? 'rank-2' : 'rank-3');
+            let icon = currentRank === 1 ? '🥇' : (currentRank === 2 ? '🥈' : '🥉');
+            if (currentRank > 3) icon = `#${currentRank}`;
+            let status = players[i].finished ? `${players[i].errors} Սխալ` : `Չի ավարտել (${players[i].score})`;
+
+            html += `<tr><td class="${cls}">${icon}</td><td class="${cls}"><span class="winner-team-name">${players[i].name}</span></td><td class="winner-stats" style="color:#fff">${status}</td></tr>`;
+        }
+        html += '</table>';
+
+        document.getElementById('final-winner-title').innerText = "ԱՐԴՅՈՒՆՔՆԵՐ";
+        document.getElementById('winner-name').innerHTML = html;
+        document.getElementById('winner-overlay').style.display = 'flex';
+        document.getElementById('screen-host-live').classList.add('hidden');
+    }
+
+    // --- PLAYER ---
+    function joinRoom() {
+        myName = document.getElementById('p-name').value;
+        let code = document.getElementById('p-code').value;
+        if (!myName || !code) return alert("Լրացրեք տվյալները");
+        
+        peer = new Peer(null, peerConfig);
+        peer.on('open', () => {
+            conn = peer.connect("tumo_" + code);
+            conn.on('open', () => {
+                conn.send({ type: 'join', name: myName });
+                showScreen('screen-player');
+                document.getElementById('player-waiting').classList.remove('hidden');
+                document.getElementById('player-playing').classList.add('hidden');
+                document.getElementById('player-final-screen').style.display = 'none';
+            });
+            conn.on('data', (data) => {
+                if (data.type === 'start') initPlayerGame(data.game, data.mode);
+                if (data.type === 'gameOver') showPlayerResult(data);
+            });
+            conn.on('error', () => alert("Սենյակը չգտնվեց"));
+        });
+    }
+
+    function showPlayerResult(data) {
+        document.getElementById('player-playing').classList.add('hidden');
+        const screen = document.getElementById('player-final-screen');
+        screen.style.display = 'flex';
+        
+        let icon = data.rank === 1 ? '🥇' : (data.rank === 2 ? '🥈' : (data.rank === 3 ? '🥉' : ''));
+        let title = data.rank === 1 ? 'ՀԱՂԹԱՆԱԿ' : `${data.rank}-րդ ՏԵՂ`;
+        let color = data.rank === 1 ? '#ffd700' : '#fff';
+
+        document.getElementById('p-final-rank').innerText = icon;
+        document.getElementById('p-final-title').innerText = title;
+        document.getElementById('p-final-title').style.color = color;
+        document.getElementById('p-final-stats').innerText = `Սխալներ՝ ${data.errors}`;
+        
+        let msg = "";
+        if (data.rank === 1) msg = "Շնորհավորում ենք, հիանալի արդյունք:";
+        else if (data.rank <= 3) msg = "Շատ լավ արդյունք:";
+        else msg = "Լավ փորձ էր:";
+        
+        document.getElementById('p-final-msg').innerText = msg;
+    }
+
+    let pState = { score:0, errors:0, seqIdx:0, max:0 };
+
+    function initPlayerGame(game, mode) {
+        document.getElementById('player-waiting').classList.add('hidden');
+        document.getElementById('player-playing').classList.remove('hidden');
+        document.getElementById('player-final-screen').style.display = 'none';
+        
+        document.getElementById('player-target').innerText = game.target;
+        
+        const collectedBox = document.getElementById('player-collected-lines');
+        collectedBox.innerText = "";
+        if (mode === 'sequence') collectedBox.classList.remove('hidden');
+        else collectedBox.classList.add('hidden');
+
+        const grid = document.getElementById('player-grid');
+        grid.innerHTML = "";
+        
+        pState = { score:0, errors:0, seqIdx:0, max: (mode==='solo'?10:game.data.length) };
+        let items = [...game.data].sort(() => Math.random() - 0.5);
+
+        items.forEach(item => {
+            let div = document.createElement('div');
+            div.className = 'word';
+            div.innerText = item.w;
+            div.onclick = () => {
+                if (div.classList.contains('used') || div.classList.contains('error')) return;
+                
+                let correct = false;
+                if (mode === 'solo') {
+                    if (item.c === 1) { correct = true; pState.score++; }
+                    else { pState.errors++; }
+                } else {
+                    if (item.order === pState.seqIdx) { correct = true; pState.score++; pState.seqIdx++; }
+                    else { pState.errors++; }
+                }
+
+                if (correct) {
+                    div.classList.add('used', 'correct');
+                    if (mode === 'sequence') collectedBox.innerText += item.w + "\n";
+                } else {
+                    div.classList.add('error');
+                    setTimeout(() => div.classList.remove('error'), 500);
+                }
+
+                let finished = (pState.score >= pState.max);
+                conn.send({ type: 'update', score: pState.score, errors: pState.errors, finished: finished });
+            };
+            grid.appendChild(div);
+        });
+    }
+</script>
+</body>
+</html>
