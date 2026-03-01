@@ -25,7 +25,6 @@
         @media (min-width: 768px) { h1 { font-size: 36px; } }
         .subtitle { color: #8fbc8f; margin-bottom: 20px; font-style: italic; text-align: center; font-size: 14px; }
         
-        /* --- ՑԱՆՑ (GRID) - ՄԻՇՏ 7 ՍՅՈՒՆԱԿ --- */
         .grid { 
             display: grid; 
             width: 100%; 
@@ -36,7 +35,6 @@
             grid-template-columns: repeat(7, 1fr) !important; 
         }
 
-        /* Բառերի ոճավորում */
         .word { 
             background: #e8f5e9; color: #051e11; 
             padding: 2px; border-radius: 4px; 
@@ -58,16 +56,14 @@
         .word.error { background: var(--wrong); color: white; animation: shake 0.4s; }
         .word.correct { background: var(--correct); color: white; }
 
-        /* Մենյու */
         .main-menu-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px; width: 100%; }
-        .main-card { width: 100%; max-width: 300px; height: 150px; background: linear-gradient(145deg, #0f3621, #0a2516); border: 3px solid var(--accent); border-radius: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5); text-align: center; padding: 10px; margin: 5px; }
+        .main-card { width: 100%; max-width: 280px; height: 150px; background: linear-gradient(145deg, #0f3621, #0a2516); border: 3px solid var(--accent); border-radius: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5); text-align: center; padding: 10px; margin: 5px; }
         @media (min-width: 768px) { .main-card { height: 220px; padding: 15px; margin: 10px; } }
         .main-card:active, .main-card:hover { transform: scale(0.98); background: var(--accent); }
         .main-card:active h2, .main-card:hover h2 { color: #051e11; }
         .main-card h2 { color: var(--accent); margin: 0; font-size: 20px; }
         .main-card p { color: #aaa; margin-top: 5px; font-size: 12px; }
 
-        /* Տեղային Խաղ */
         .local-game-container { width: 100%; max-width: 1400px; display: flex; flex-direction: column; align-items: center; }
         .teams-row { display: flex; width: 100%; gap: 5px; margin-bottom: 10px; }
         .team-card { flex: 1; background: var(--card-bg); padding: 5px; border-radius: 8px; border: 2px solid #2e5c44; text-align: center; transition: 0.3s; min-width: 0; }
@@ -75,6 +71,7 @@
         .team-name { font-size: 14px; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .team-score { font-size: 24px; font-weight: 900; color: #fff; margin: 2px 0; }
         .team-list { height: 50px; overflow-y: auto; text-align: left; color: #a8d5ba; font-size: 10px; border-top: 1px solid #2e5c44; margin-top: 2px; padding-top: 2px; }
+        
         @media (min-width: 768px) {
             .teams-row { gap: 15px; margin-bottom: 20px; }
             .team-card { padding: 15px; border-radius: 12px; }
@@ -83,21 +80,18 @@
             .team-list { height: 100px; font-size: 16px; }
         }
 
-        /* Օնլայն Լոբբի */
         .lobby-box { background: rgba(15, 54, 33, 0.95); padding: 20px; border-radius: 20px; border: 2px solid var(--accent); text-align: center; max-width: 500px; width: 95%; margin-top: 10px; }
         .room-code { font-size: 30px; letter-spacing: 3px; background: black; color: white; padding: 10px; border-radius: 10px; display: inline-block; margin: 10px 0; border: 2px dashed var(--accent); }
         input { padding: 10px; font-size: 16px; border-radius: 10px; width: 90%; margin: 10px 0; text-align: center; box-sizing: border-box; }
         .player-list { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
         .player-tag { background: #14402a; padding: 5px 10px; border-radius: 15px; border: 1px solid var(--accent); font-weight: bold; font-size: 12px; }
 
-        /* Կոճակներ */
         .btn { padding: 10px 20px; font-size: 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; margin: 5px; transition: 0.2s; width: 100%; max-width: 250px; }
         .btn-gold { background: var(--accent); color: #051e11; }
         .btn-blue { background: #2980b9; }
         .btn-red { background: #c0392b; }
         .btn-back { position: fixed; top: 10px; left: 10px; background: #34495e; font-size: 12px; padding: 5px 10px; z-index: 1000; width: auto; }
 
-        /* Leaderboard */
         .leaderboard { width: 95%; max-width: 1400px; margin-top: 20px; }
         .lb-row { display: flex; align-items: center; background: #14402a; margin-bottom: 15px; padding: 15px 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .lb-name { flex: 1; text-align: left; font-weight: 900; font-size: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 1px 1px 2px black; }
@@ -106,7 +100,6 @@
         @media (min-width: 500px) { .bar-container { display: block; } }
         .bar-fill { height: 100%; background: linear-gradient(90deg, #d4a017, #f1c40f); width: 0%; transition: width 0.5s ease-in-out; }
 
-        /* Player Screen Elements */
         #player-collected-lines {
             width: 90%; min-height: 40px;
             background: rgba(0,0,0,0.3);
@@ -124,7 +117,6 @@
         .result-stats { font-size: 20px; color: white; margin-bottom: 20px; }
         .result-msg { font-size: 18px; color: #8fbc8f; font-style: italic; padding: 0 20px; }
 
-        /* Winner Overlay (Host & Common) */
         #winner-overlay { 
             display: none; position: fixed; top: 0; left: 0; 
             width: 100%; height: 100%; 
@@ -166,6 +158,10 @@
             <div class="main-card" onclick="openOnlinePortal('solo')">
                 <h2>Ուշադրության Փորձություն</h2>
                 <p>Օնլայն </p>
+            </div>
+            <div class="main-card" onclick="openOnlinePortal('quatrain')">
+                <h2>Քառյակների Մարաթոն</h2>
+                <p>15 քառյակ (Արագություն)</p>
             </div>
             <div class="main-card" onclick="openOnlinePortal('sequence')">
                 <h2>Հավաքիր Տողերը</h2>
@@ -267,7 +263,7 @@
             ]},
             { name: "Խորամանկություն", teams: ["ՊՈՉԱՏ ԱՂՎԵՍԸ", "ՉԱՐԻ ՎԵՐՋԸ", "ԿԻԿՈՍԻ ՄԱՀԸ"], data: [
                 { w: "Պառավ", c:1}, { w: "Կաթ", c:1}, { w: "Կցել", c:1}, { w: "Ծառ", c:3}, { w: "Աղբյուր", c:1}, { w: "Կով", c:1}, { w: "Արտ", c:1}, { w: "Չարչի", c:1},
-                { w: "Կկու", c:2}, { w: "Աղվես", c:2}, { w: "Ագռավ", c:2}, { w: "Ձագուկներ", c:2}, { w: "Սարի լանջ", c:2}, { w: "Երկաթե", c:2}, { w: "Դարբին", c:2}, { w: "Թակարդ", c:2},
+                { w: "Կկու", c:2}, { w: "Աղվես", c:2}, { w: "Ագռավ", c:2}, { w: "Ձագուկներ", c:2}, { w: "Սարի լանջ", c:2}, { w: "Երկաթե", c:2}, { w: "Դարբին", c:2}, { w: "Թագավոր", c:2},
                 { w: "Հիմարություն", c:3}, { w: "Ողբ", c:3}, { w: "Ծառ", c:3}, { w: "Քար", c:3}, { w: "Հորաքույր", c:3}, { w: "Խնամիներ", c:3}, { w: "Ալյուր", c:3}, { w: "Գոմ", c:3},
                 { w: "Խորամանկություն", c:[1,2]}, { w: "Սուգ", c:3}, { w: "Անտառ", c:2}, { w: "Ճանապարհորդություն", c:1}
             ]},
@@ -277,7 +273,7 @@
                 { w: "Մարդ ու Կին", c:3}, { w: "Յուղ ու բրինձ", c:3}, { w: "Հիմար մարդիկ", c:3}, { w: "Ձիավոր", c:3}, { w: "Փախուստ", c:3}, { w: "«Բարեկենդան»", c:3}, { w: "Վրեժ", c:1}, { w: "Խաբեություն", c:3},
                 { w: "Հարստություն", c:[2,3]}, { w: "Աշխատանք", c:[1,2]}, { w: "Ագահություն", c:1}, { w: "Ծիծաղ", c:3}
             ]},
-            { name: "Խրատական", teams: ["ՄԻ ԿԱԹԻԼ ՄԵՂՐԸ", "ԽԵԼՈՔՆ ՈՒ ՀԻՄԱՐԸ", "ՍՈՒՏԱՍԱՆԸ"], data: [
+            { name: "Խրատական", teams: ["ՄԻ ԿԱԹԻԼ ՄԵՂՐԸ", "ԽԵԼՈՔՆ ՈՒ ՀԻմԱՐԸ", "ՍՈՒՏԱՍԱՆԸ"], data: [
                 { w: "Մեղր", c:1}, { w: "Ճանճ", c:1}, { w: "Կատու", c:1}, { w: "Շուն", c:1}, { w: "Խանութպան", c:1}, { w: "Գյուղացի", c:1}, { w: "Պատերազմ", c:1}, { w: "Ավերակ", c:1},
                 { w: "Երկու եղբայր", c:2}, { w: "Ուղևորություն", c:2}, { w: "Կովեր", c:2}, { w: "Եզներ", c:2}, { w: "Հարստություն", c:2}, { w: "Վիճաբանություն", c:2}, { w: "Մորթել", c:2}, { w: "Արդարություն", c:2},
                 { w: "Թագավոր", c:3}, { w: "Ստախոս", c:3}, { w: "Կոտ", c:3}, { w: "Ոսկի", c:3}, { w: "Երեք սուտ", c:3}, { w: "Դարպաս", c:3}, { w: "Հնարամտություն", c:3}, { w: "Գյուղացի", c:3},
@@ -301,15 +297,33 @@
                 { w: "Խենթը", c:0}, { w: "Մազութի Համո", c:0}, { w: "Շուշանիկ", c:0}, { w: "Մարան", c:0}, { w: "Աշոտ", c:0}, { w: "Զիմզիմով", c:0}, { w: "Էլիզբարով", c:0}, { w: "Մարզպետունի", c:0}
             ]}
         ],
+        quatrain: [
+            { name: "Մարաթոն", target: "Հավաքիր 15 քառյակ", data: [
+               {w:"Երազումս մի մաքի", order:0}, {w:"Մոտս եկավ Հարցմունքի.", order:1}, {w:"― Աստված պահի քո որդին,", order:2}, {w:"Ո՞նց էր համը իմ ձագի…", order:3},
+            {w:"Ո՜նց է ժպտում իմ հոգին", order:4}, {w:"Չարին, բարուն,― ամենքին.", order:5}, {w:"Լույս է տալիս ողջ կյանքիս", order:6}, {w:"Ու էն ճամփիս անմեկին։", order:7},
+            {w:"Մի հավք զարկի ես մի օր.", order:8}, {w:"Թըռա՜վ, գընաց վիրավոր։", order:9}, {w:"Թըռչում է միշտ իմ մըտքում", order:10}, {w:"Թևը արնոտ ու մոլոր։", order:11},
+            {w:"Լինե՜ր հեռու մի անկյուն,", order:12}, {w:"Լինե՜ր մանկան արդար քուն,", order:13}, {w:"Երազի մեջ երջանիկ,", order:14}, {w:"Հաշտ ու խաղաղ մարդկություն։", order:15},
+            {w:"Երկու շիրիմ իրար կից,", order:16}, {w:"Հավերժական լուռ դըրկից,", order:17}, {w:"Թախծում են պաղ ու խորհում", order:18}, {w:"Թե` ի՜նչ տարան աշխարհքից։", order:19},
+            {w:"Վերջացա՜վ…", order:20}, {w:"Կյանքս մաշվեց, վերջացա՜վ.", order:21}, {w:"Ինչ հույս արի` փուչ ելավ,", order:22}, {w:"Ինչ խնդություն` վերջը ցա՜վ։", order:23},
+            {w:"Ա՛նց կացա՜ն…", order:24}, {w:"Օրերս թռան, ա՛նց կացա՜ն.", order:25}, {w:"Ախ ու վախով, դարդերով", order:26}, {w:"Սիրտըս կերա՜ն, ա՛նց կացա՜ն", order:27},
+            {w:"Երկու դարի արանքում,", order:28}, {w:"Երկու քարի արանքում,", order:29}, {w:"Հոգնել եմ նոր ընկերի", order:30}, {w: "Ու հին ցավի արանքում։", order:31},
+            {w:"Ո՞ւր կորա՜ն…", order:32}, {w:"Մոտիկներըս ո՞ւր կորա՜ն.", order:33}, {w:"Ինչքան լացի, ձեն ածի`", order:34}, {w:"Ձեն չի տվին, լո՜ւռ կորան։", order:35},
+            {w:"Ծով է իմ վիշտն, անափ ու խոր,", order:36}, {w:"Լիքն ակունքով հազարավոր.", order:37}, {w:"Իմ զայրույթը լիքն է սիրով,", order:38}, {w:"Իմ գիշերը` լիքն աստղերով։", order:39},
+            {w:"Քանի՜ մահ կա իմ սրտում,", order:40}, {w:"Թափուր գահ կա իմ սրտում.", order:41}, {w:"Չէ՛, դու էլ ես մահացու.", order:42}, {w:"Մահի ահ կա իմ սրտում։", order:43},
+            {w:"Հին աշխարհքը ամեն օր", order:44}, {w:"Հազար մարդ է մտնում նոր,", order:45}, {w:"Հազար տարվան փորձն ու գործ", order:46}, {w:"Ըսկսում է ամեն օր։", order:47},
+            {w:"Բերանն արնոտ Մարդակերը էն անբան", order:48}, {w:"Հազար դարում հազիվ դառավ Մարդասպան.", order:49}, {w:"Ձեռքերն արնոտ գընում է նա դեռ կամկար,", order:50}, {w:"Ու հեռու է մինչև Մարդը իր ճամփան։", order:51},
+            {w:"Արևելքի եդեմներին իջավ պայծառ իրիկուն,", order:52}, {w:"Հեքիաթական պալատներում ըսպասում են իմ հոգուն.", order:53}, {w:"Ի՜նչ եմ շինում էս ցեխերում, աղմուկի մէջ վայրենի…", order:54}, {w:"Ա՜խ, թէ նորից գտնեմ ճամփան, դեպի էնտե՜ղ, դեպի տուն…", order:55}
+            ]}
+        ],
         sequence: [
-            { name: "Բանաստեղծություն №1", realName: "Շունն ու Կատուն", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+            { name: "Շունն ու Կատուն", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
                 { w: "Ժամանակով Կատուն ճոն էր,", order:0}, { w: "Շունն էլ գըլխին գըդակ չուներ,", order:1},
                 { w: "Միայն, գիտեմ ոչ` որդիանց որդի,", order:2}, { w: "Ճանկել էր մի գառան մորթի:", order:3},
                 { w: "Եկավ մի օր, ձմեռվան մըտին,", order:4}, { w: "Կատվի կուշտը տարավ մորթին:", order:5},
                 { w: "— Բարի աջողում, ուստա Փիսո,", order:6}, { w: "Գլուխըս մըրսեց, ի սեր Աստծո,", order:7},
                 { w: "Ա՛ռ էս մորթին ու ինձ համար", order:8}, { w: "Մի գդակ կարի գըլխիս հարմար:", order:9}
             ]},
-            { name: "Բանաստեղծություն №2", realName: "Առաջին ձյունը", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+            { name: "Առաջին ձյունը", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
                 { w: "― Վա՜յ, մայրի՛կ ջան, տե՜ս,", order:0}, { w: "Բակն ու դուռը լի", order:1},
                 { w: "Ինչքա՜ն սպիտակ", order:2}, { w: "Թիթեռ է գալի...", order:3},
                 { w: "Էսքան շատ թիթեռ", order:4}, { w: "Չեմ տեսել ես դեռ։", order:5},
@@ -318,13 +332,36 @@
                 { w: "Էտ ձյունն է գալի,", order:10}, { w: "Փաթիլն է ձյունի,", order:11},
                 { w: "Որ կարծես սպիտակ", order:12}, { w: "Թիթեռնիկ լինի։", order:13}
             ]},
-            { name: "Բանաստեղծություն №3", realName: "Անուշ (Հատված)", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+            { name: "Անուշ (Հատված)", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
                 { w: "Ա՜խ, ի՜նչ լավ են սարի վըրա", order:0}, { w: "Անցնում օրերն, անո՜ւշ, անո՜ւշ,", order:1},
                 { w: "Անըրջային, թեթևասահ", order:2}, { w: "Ամպ ու հովերն անո՜ւշ, անո՜ւշ։", order:3},
                 { w: "Ահա բացվեց թարմ առավոտ", order:4}, { w: "Վարդ է թափում սարին-քարին,", order:5},
                 { w: "Շաղ են շողում ծաղիկ ու խոտ,", order:6}, { w: "Շընչում բուրմունք եդեմային։", order:7},
                 { w: "Ա՜խ, ի՜նչ հեշտ են սարի վըրա", order:8}, { w: "Սահում ժամերն անո՜ւշ, անո՜ւշ,", order:9},
                 { w: "Շըվին փըչեց հովիվն ահա―", order:10}, { w: "Աղջիկն ու սերն անո՜ւշ, անո՜ւշ։", order:11}
+            ]},
+            { name: "Հին օրհնություն", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+                { w: "Կանաչ, վիթխարի ընկուզենու տակ,", order:0}, { w: "Իրենց հասակի կարգով, ծալպատակ,", order:1},
+                { w: "Միասին բազմած,", order:2}, { w: "Մի շըրջան կազմած,", order:3},
+                { w: "Քեֆ էին անում", order:4}, { w: "Եվ ուրախանում", order:5},
+                { w: "Մեր հըսկա պապերն ու մեր հայրերը՝", order:6}, { w: "Գյուղի տերերը։", order:7},
+                { w: "Մենք, առույգ ու ժիր գեղջուկ մանուկներ,", order:8}, { w: "Երեք դասընկեր,", order:9},
+                { w: "Նըրանց առաջին գըլխաբաց կանգնած,", order:10}, { w: "Ձեռքներըս խոնարհ սըրտներիս դըրած,", order:11},
+                { w: "Զի՜լ, ուժեղ ձայնով նըրանց ըսպասում―", order:12}, { w: "Տաղ էինք ասում։", order:13}
+            ]},
+            { name: "Հայոց լեռներում", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+                { w: "Մեր ճամփեն խավար, մեր ճամփեն գիշեր,", order:0}, { w: "Ու մենք անհատնում", order:1},
+                { w: "Էն անլույս մըթնում", order:2}, { w: "Երկա՜ր դարերով գընում ենք դեպ վեր", order:3},
+                { w: "Հայոց լեռներում,", order:4}, { w: "Դըժար լեռներում։", order:5},
+                { w: "Տանում ենք հընուց մեր գանձերն անգին,", order:6}, { w: "Մեր գանձերը ծով,", order:7},
+                { w: "Ինչ որ դարերով", order:8}, { w: "Երկնել է, ծընել մեր խորունկ հոգին", order:9},
+                { w: "Հայոց լեռներում,", order:10}, { w: "Բարձըր լեռներում։", order:11}
+            ]},
+            { name: "Մենք ուխտ ունենք", target: "Դասավորիր ճիշտ հերթականությամբ", data: [
+                { w: "Մենք ուխտ ունենք՝ միշտ դեպի լույս,", order:0}, { w: "Ու գընում ենք մեր ճամփով,", order:1},
+                { w: "Մըրրիկներով պատած անհույս,", order:2}, { w: "Սև խավարով, մութ ամպով։", order:3},
+                { w: "Մենք անցել ենք արյան ծովեր,", order:4}, { w: "Սուր ենք տեսել ու կըրակ,", order:5},
+                { w: "Մեր ճակատը դեմ ենք արել", order:6}, { w: "Մըրրիկներին հակառակ։", order:7}
             ]}
         ]
     };
@@ -473,14 +510,15 @@
     // --- ONLINE (PEERJS) ---
     let peer = null;
     let conn = null;
-    let connections = {}; 
-    let onlineMode = ""; 
+    let connections = {}; 
+    let onlineMode = ""; 
     let myName = "";
 
     function openOnlinePortal(mode) {
         onlineMode = mode;
         showScreen('screen-online-portal');
-        document.getElementById('online-portal-title').innerText = mode === 'solo' ? "ՈՒՇԱԴՐՈՒԹՅՈՒՆ" : "ՀԱՎԱՔԻՐ ՏՈՂԵՐԸ";
+        const titles = { solo: "ՈՒՇԱԴՐՈՒԹՅՈՒՆ", sequence: "ՀԱՎԱՔԻՐ ՏՈՂԵՐԸ", quatrain: "ՔԱՌՅԱԿՆԵՐԻ ՄԱՐԱԹՈՆ" };
+        document.getElementById('online-portal-title').innerText = titles[mode] || "ՕՆԼԱՅՆ";
     }
 
     function setupHost() {
@@ -671,7 +709,7 @@
         document.getElementById('p-final-msg').innerText = msg;
     }
 
-    let pState = { score:0, errors:0, seqIdx:0, max:0 };
+    let pState = { score:0, errors:0, seqIdx:0, max:0, fullData: [] };
 
     function initPlayerGame(game, mode) {
         document.getElementById('player-waiting').classList.add('hidden');
@@ -682,16 +720,35 @@
         
         const collectedBox = document.getElementById('player-collected-lines');
         collectedBox.innerText = "";
-        if (mode === 'sequence') collectedBox.classList.remove('hidden');
+        if (mode === 'sequence' || mode === 'quatrain') collectedBox.classList.remove('hidden');
         else collectedBox.classList.add('hidden');
 
+        pState = { 
+            score: 0, 
+            errors: 0, 
+            seqIdx: 0, 
+            max: (mode === 'solo' ? 10 : game.data.length),
+            fullData: game.data
+        };
+        
+        renderCurrentBatch(mode);
+    }
+
+    function renderCurrentBatch(mode) {
         const grid = document.getElementById('player-grid');
         grid.innerHTML = "";
         
-        pState = { score:0, errors:0, seqIdx:0, max: (mode==='solo'?10:game.data.length) };
-        let items = [...game.data].sort(() => Math.random() - 0.5);
+        // --- ՍԱ ԱՅՆ ՓՈՓՈԽՈՒԹՅՈՒՆՆ Է, ՈՐԸ ԽՆԴՐԵԼ ԷԻՔ ---
+        // Եթե quatrain է, վերցնում ենք միայն ընթացիկ քառյակի 4 տողերը
+        let itemsToDisplay = [...pState.fullData];
+        if (mode === 'quatrain') {
+            let currentQStart = Math.floor(pState.seqIdx / 4) * 4;
+            itemsToDisplay = itemsToDisplay.filter(item => item.order >= currentQStart && item.order < currentQStart + 4);
+        }
 
-        items.forEach(item => {
+        let shuffled = [...itemsToDisplay].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach(item => {
             let div = document.createElement('div');
             div.className = 'word';
             div.innerText = item.w;
@@ -709,7 +766,17 @@
 
                 if (correct) {
                     div.classList.add('used', 'correct');
-                    if (mode === 'sequence') collectedBox.innerText += item.w + "\n";
+                    if (mode === 'sequence' || mode === 'quatrain') {
+                        document.getElementById('player-collected-lines').innerText += item.w + "\n";
+                        
+                        // Եթե քառյակն ավարտվեց (4-րդ տողը ճիշտ էր), բերում ենք հաջորդը
+                        if (mode === 'quatrain' && pState.seqIdx % 4 === 0 && pState.seqIdx < pState.max) {
+                            setTimeout(() => {
+                                document.getElementById('player-collected-lines').innerText = "";
+                                renderCurrentBatch(mode);
+                            }, 400);
+                        }
+                    }
                 } else {
                     div.classList.add('error');
                     setTimeout(() => div.classList.remove('error'), 500);
